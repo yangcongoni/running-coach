@@ -1,0 +1,19 @@
+# Track only individually reviewed source files.
+*
+!/.gitignore
+!/outputs/
+!/outputs/garmin_sync/
+!/outputs/local_archive/
+!/outputs/garmin_sync/garmin_secure_auth.py
+!/outputs/garmin_sync/garmin_store.py
+!/outputs/garmin_sync/garmin_verified.py
+!/outputs/garmin_sync/physiology.py
+!/outputs/garmin_sync/recovery_extras.py
+!/outputs/local_archive/daily_store.py
+!/outputs/local_archive/session_feedback_store.py
+!/outputs/local_archive/export_page.py
+!/outputs/local_archive/mobile.html
+!/outputs/local_archive/mobile.js
+!/outputs/local_archive/mobile_journal.js
+!/outputs/local_archive/mobile_library.js
+!/outputs/local_archive/web_watchdog.py
