@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>训练手记 · 跑步档案</title>
+<style>
+*{box-sizing:border-box}body{margin:auto;padding:24px;max-width:1200px;font:16px/1.5 system-ui;color:#30292b;background:#fcfaf8}
+button,a{font:inherit}button{cursor:pointer}h1{font-size:1.7rem}nav{display:flex;gap:20px}dialog{border:1px solid #d8cecb;border-radius:12px;max-width:90vw}
+dialog button{float:right} a{color:#81263d}
+ /* run-period-style:start */
+ /* include:run-period-style */
+ /* run-period-style:end */
+</style><main><h1>跑步档案</h1><div id="archive" aria-live="polite"></div>
+<nav><a href="/export.json">导出完整 JSON</a><a class="button" href="/backup.sqlite3">下载数据库</a></nav>
+<dialog><button type="button" onclick="this.parentElement.close()">关闭</button><h2>跑步记录</h2><p id="activity"></p></dialog>
+</main><script>
+/* footprint-shared:start */
+/* include:footprint-shared */
+/* footprint-shared:end */
+/* run-period:start */
+/* include:run-period */
+/* run-period:end */
+let D, page='running';
+const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+function navigate(){
+  const sessions=new Map(D.sessions.filter(s=>s.sport==='running').map(s=>[s.id,s]));
+  const runs=D.running_details.filter(r=>sessions.has(r.session_id)).map(r=>{
+    const s=sessions.get(r.session_id),raw=JSON.parse(r.details_json||'{}');
+    return {...r,id:s.id,date:s.date,raw,cadence:raw.averageRunningCadenceInStepsPerMinute,
+      stride:raw.avgStrideLength_m??(raw.avgStrideLength==null?null:raw.avgStrideLength/100),
+      vertical:raw.avgVerticalOscillation_cm??raw.avgVerticalOscillation,ratio:raw.avgVerticalRatio,
+      contact:raw.graphGroundContactTime_ms??raw.avgGroundContactTime_ms??raw.avgGroundContactTime};
+  });
+  const host=document.querySelector('#archive');
+  host.innerHTML=RunPeriods.render(RunPeriods.scoped(runs,'all'),{asOf:D._release?.snapshot_date||new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai'}).format(new Date()),scope:'all',metric:(r,k)=>r[k],climb:r=>r.raw.elevationGain});
+  RunPeriods.bind(host,navigate,id=>{
+    const r=runs.find(item=>item.id===id);
+    if(!r)return;
+    document.querySelector('#activity').textContent=[r.date,r.raw.activityName,r.distance_km==null?null:r.distance_km.toFixed(2)+' km'].filter(Boolean).join(' · ');
+    document.querySelector('dialog').showModal();
+  });
+}
+async function load(){try{const response=await fetch('/api/data');if(!response.ok)throw Error();D=await response.json();navigate(page)}catch{document.querySelector('#archive').textContent='训练档案读取失败，请刷新重试。'}}load();
+</script></html>

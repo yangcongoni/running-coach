@@ -4,6 +4,7 @@ The source database is read-only.  The full HTML and JSON remain lossless export
 the mobile snapshot only omits duplicate/raw transport and audit payloads.
 """
 from pathlib import Path
+from archive_config import desktop_template
 import base64
 import copy
 from datetime import datetime, timezone, timedelta
@@ -112,7 +113,7 @@ def data_date(data):
 def make_html(template, data, backup, mode):
     html = template
     assets = {name: 'data:image/png;base64,' + base64.b64encode((ROOT / 'assets' / name).read_bytes()).decode('ascii')
-              for name in ('strength-anatomy-v2.png', 'strength-anatomy-back.png', *sorted(p.name for p in (ROOT / 'assets').glob('race-map-*.png')))}
+              for name in (('strength-anatomy-v2.png', 'strength-anatomy-back.png') if 'strength-anatomy-' in template else ()) + tuple(sorted(p.name for p in (ROOT / 'assets').glob('race-map-*.png')))}
     # Assets appear once in the bundle, independently of the number of rendered body maps.
     html = html.replace('/assets/${asset}', '${OFFLINE_ASSETS[asset]}')
     for name in assets:
@@ -195,7 +196,7 @@ def publish():
         with sqlite3.connect(':memory:') as target:
             conn.backup(target)
             backup = base64.b64encode(target.serialize()).decode('ascii')
-    template = (ROOT / 'index.html').read_text(encoding='utf-8')
+    template = desktop_template()
     now = datetime.now(timezone(timedelta(hours=8)))
     hasher = hashlib.sha256(template.encode('utf-8'))
     for chunk in json_chunks(data):
