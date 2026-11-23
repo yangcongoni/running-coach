@@ -3,7 +3,7 @@ from contextlib import closing
 import copy, datetime as dt, hashlib, json, sqlite3, uuid
 from pathlib import Path
 
-from garmin_verified import merge_records
+from garmin_verified import STATUS_MAP, merge_records
 
 TZ=dt.timezone(dt.timedelta(hours=8))
 def now():return dt.datetime.now(TZ).isoformat(timespec='seconds')
@@ -157,8 +157,7 @@ def import_batch(db,bundle,backup_dir,fail_after=None):
             f=m['fields'];r['api_observation']=m;r['api_source_id']=source
             for k in ['acute_load','chronic_load','load_ratio']:
                 if f.get(k) is not None:r[k]=f[k]
-            # Only independently verified code 7 is labelled here; other codes require review.
-            if f.get('training_status_raw')==7:r['training_status']='高效训练'
+            if f.get('training_status_raw') in STATUS_MAP:r['training_status']=STATUS_MAP[f['training_status_raw']]
             elif f.get('training_status_raw') is not None:r['training_status']='待核对（设备代码'+str(f['training_status_raw'])+'）'
             r['last_verified_at']=bundle['read_at']
             if m.get('period_start'):

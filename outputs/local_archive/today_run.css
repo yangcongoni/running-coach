@@ -1,0 +1,17 @@
+.today-run-card[hidden]{display:none!important}
+#view .today-run-card{box-sizing:border-box;background:#fffdfb;border:1px solid #ddcbd0;border-radius:12px;padding:19px 23px 9px;margin:0 0 14px;color:#302b29;order:1}
+.today-run-card .tr-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#view .today-run-card h2{margin:0;border:0;padding:0;font-size:20px;line-height:1.35}
+.tr-head time{margin-left:auto;color:#756d68;font-size:13px}.tr-type{color:#792e47;background:#f4e9ed;border-radius:5px;padding:2px 8px;font-size:13px}.tr-head select{max-width:65%;font:inherit;font-size:13px}
+.today-run-card .tr-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));margin:17px 0 14px;font-variant-numeric:tabular-nums}
+.tr-stats div+div{border-left:1px solid #e8e0dd;padding-left:16px}
+.tr-stats dt{font-size:13px;color:#716966}.tr-stats dd{margin:2px 0 0;font-size:clamp(22px,2.8vw,34px);font-weight:650;line-height:1.2;white-space:nowrap}.tr-stats div:first-child dd{color:#80334b}.tr-stats small{font-size:13px;color:#756d6c;font-weight:400}
+.tr-notes{border-top:1px solid #e8e0dd;padding-top:7px}.today-run-card .tr-notes p{margin:5px 0;font-size:14px;line-height:1.55}.tr-notes b{margin-right:6px}.tr-pending{color:#716966}
+#view .today-run-card .tr-open{display:flex;align-items:center;gap:6px;background:none;border:0;padding:5px 0;color:#80334b;font-size:14px;font-weight:650;cursor:pointer;min-height:36px;margin-left:auto}.tr-open span{font-size:20px;line-height:1}
+.tr-groups{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:12px;font-size:12px}
+@media(max-width:700px){
+ #view .today-run-card{padding:14px 16px 5px;margin:6px 0 16px;border-radius:15px}
+ .tr-head time{font-size:12px}.today-run-card .tr-stats{grid-template-columns:1.12fr 1fr 1fr;gap:8px 10px;margin:15px 0}
+ .tr-stats div+div{padding:0;border:0}.tr-stats div:first-child{grid-row:span 2;align-content:center;border-right:1px solid #e8e0dd}.tr-stats dt{font-size:12px}.tr-stats dd{font-size:19px}.tr-stats div:first-child dd{font-size:clamp(26px,7vw,36px)}.tr-stats small{font-size:11px}
+ #view .today-run-card .tr-open{justify-content:space-between;width:100%;border-top:1px solid #eee6e4;border-radius:0;margin-top:8px;min-height:41px}
+}

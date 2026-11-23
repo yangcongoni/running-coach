@@ -4,7 +4,7 @@ def init(db):
  with sqlite3.connect(db) as c:
   c.execute('''CREATE TABLE IF NOT EXISTS daily_submissions(date TEXT PRIMARY KEY,payload_json TEXT NOT NULL,revision INTEGER NOT NULL,submission_id TEXT NOT NULL,request_id TEXT UNIQUE NOT NULL,status TEXT NOT NULL DEFAULT '待分析',created_at TEXT NOT NULL,updated_at TEXT NOT NULL)''')
   c.execute('''CREATE TABLE IF NOT EXISTS daily_submission_history(id INTEGER PRIMARY KEY,date TEXT NOT NULL,revision INTEGER NOT NULL,payload_json TEXT NOT NULL,request_id TEXT UNIQUE NOT NULL,submitted_at TEXT NOT NULL,UNIQUE(date,revision))''')
-def submit(db,data):
+def submit(db,data,before_change=None):
  if not isinstance(data,dict):raise ValueError('提交格式错误')
  day=data.get('date','')
  try:
@@ -34,9 +34,18 @@ def submit(db,data):
   replay=c.execute('SELECT * FROM daily_submission_history WHERE request_id=?',(rid,)).fetchone()
   if replay:
    if replay['date']!=day or replay['payload_json']!=encoded:raise ValueError('请求编号重复但内容不同')
-   row=dict(c.execute('SELECT * FROM daily_submissions WHERE date=?',(day,)).fetchone());return {'ok':True,'date':day,'revision':replay['revision'],'submission_id':row['submission_id'],'replayed':True}
+   row=dict(c.execute('SELECT * FROM daily_submissions WHERE date=?',(day,)).fetchone());return {'ok':True,'date':day,'revision':replay['revision'],'current_revision':row['revision'],'submission_id':row['submission_id'],'replayed':True}
   old=c.execute('SELECT * FROM daily_submissions WHERE date=?',(day,)).fetchone()
-  if (old['revision'] if old else 0)!=expected:raise RuntimeError('此日期记录已更新，请重新读取后补充，避免覆盖其他设备的修改')
+  if old and expected<=old['revision'] and json.loads(old['payload_json'])==clean:
+   return {'ok':True,'date':day,'revision':old['revision'],'submission_id':old['submission_id'],'replayed':True}
+  if (old['revision'] if old else 0)!=expected:
+   # Another request may have committed identical fields before its acknowledgement was lost.
+   previous=c.execute('SELECT revision FROM daily_submission_history WHERE date=? AND revision IN (?,?) AND payload_json=? ORDER BY revision DESC LIMIT 1',(day,expected,expected+1,encoded)).fetchone()
+   if previous and old:
+    return {'ok':True,'date':day,'revision':previous['revision'],'current_revision':old['revision'],'submission_id':old['submission_id'],'replayed':True}
+   raise RuntimeError('此日期记录已更新，请重新读取后补充，避免覆盖其他设备的修改')
+  # BEGIN IMMEDIATE keeps concurrent writers out while a separate reader snapshots the pre-write state.
+  if before_change is not None:before_change()
   rev=expected+1;sid=old['submission_id'] if old else str(uuid.uuid4())
   c.execute('INSERT INTO daily_submission_history(date,revision,payload_json,request_id,submitted_at) VALUES(?,?,?,?,?)',(day,rev,encoded,rid,now))
   c.execute('''INSERT INTO daily_submissions VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(date) DO UPDATE SET payload_json=excluded.payload_json,revision=excluded.revision,request_id=excluded.request_id,status='待分析',updated_at=excluded.updated_at''',(day,encoded,rev,sid,rid,'待分析',old['created_at'] if old else now,now))

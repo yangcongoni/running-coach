@@ -125,13 +125,13 @@ function drawPhysOverlay(el,c,keys,axis,labels,settings,stage,clipId){
 }
 
 const RunPeriods = (() => {
-  const modes = ['年','月','周','日','全部'];
+  const modes = ['年','月','周','全部'];
   const names = {年:'年度汇总',月:'月度汇总',周:'每周汇总',日:'每日汇总',全部:'累计汇总'};
   const form = [
     ['cadence','步频','步/分',0], ['stride','步幅','m',2],
     ['vertical','垂直振幅','cm',1], ['ratio','垂直振幅比','%',1], ['contact','触地时间','ms',0]
   ];
-  const state = {mode:'年', focus:null, history:[], limit:4, scope:''};
+  const state = {mode:'年', focus:null, rootView:null, limit:4, scope:''};
   const shift = (date,days) => {
     const d = new Date(date+'T12:00:00Z');
     d.setUTCDate(d.getUTCDate()+days);
@@ -151,7 +151,7 @@ const RunPeriods = (() => {
     return out;
   }
   function scoped(rows,signature) {
-    if(state.scope!==signature){state.scope=signature; state.focus=null;state.history=[];state.limit=4}
+    if(state.scope!==signature){state.scope=signature; state.focus=null;state.rootView=null;state.limit=4}
     return state.focus ? rows.filter(r=>key(r.date,state.focus.unit)===state.focus.key) : rows;
   }
   function distance(rows) {
@@ -211,25 +211,61 @@ const RunPeriods = (() => {
   function label(k,unit) {
     if(unit==='年')return k+' 年';
     if(unit==='月')return k.slice(0,4)+' 年 '+Number(k.slice(-2))+' 月';
-    if(unit==='周')return k+' 至 '+shift(k,6).slice(5);
+    if(unit==='周')return k.slice(0,4)+' 年 '+Number(k.slice(5,7))+' 月第 '+Math.ceil(Number(k.slice(8))/7)+' 周';
     return unit==='全部'?'所选范围':k;
   }
-  function bars(k,rows,unit,child,max) {
-    const buckets=groups(rows,child),keys=binKeys(k,unit,buckets,child);
-    return '<div class="rp-chartlabel">'+child+'跑量 · km</div><div class="rp-bars" style="--slots:'+(unit==='月'?31:Math.max(keys.length,1))+'">'+keys.map((b,i)=>{
+  function datePath(scope) {
+    const focus=state.focus;
+    const rootLabel=scope==='all'?'全部历史':scope==='cycle'?'训练周期':'所选日期';
+    const parts=[{unit:'root',key:'',text:rootLabel}];
+    if(focus){
+      const k=focus.key;
+      if(focus.unit==='周'||focus.week){
+        const week=focus.week||k;
+        parts.push({unit:'周',key:week,text:label(week,'周')});
+      }else{
+        parts.push({unit:'年',key:k.slice(0,4),text:k.slice(0,4)+' 年'});
+        if(focus.unit!=='年')parts.push({unit:'月',key:k.slice(0,7),text:Number(k.slice(5,7))+' 月'});
+      }
+      if(focus.unit==='日')parts.push({unit:'日',key:k,text:focus.week?k.slice(5):Number(k.slice(8))+' 日'});
+      // Clicking a card heading opens a list of its children. Its own summary is still reachable.
+      if(state.mode!==focus.unit)parts.push({text:state.mode==='月'?'各月汇总':'各日汇总'});
+    }
+    return '<div class="rp-path" role="navigation" aria-label="跑步档案日期路径">'+parts.map((p,i)=>{
+      const sep=i?'<span class="rp-separator" aria-hidden="true">›</span>':'';
+      return sep+(i===parts.length-1?'<span aria-current="page" tabindex="-1">'+esc(p.text)+'</span>':
+        '<button type="button" data-rp-path="'+p.unit+'" data-rp-key="'+p.key+'">'+esc(p.text)+'</button>');
+    }).join('')+'</div>';
+  }
+  function bars(k,rows,unit,child,max,opt) {
+    const buckets=groups(rows,child);
+    let keys=binKeys(k,unit,buckets,child);
+    const monthly=unit==='年';
+    if(monthly && opt.scope!=='all' && opt.from && opt.to){
+      const until=opt.to<opt.asOf?opt.to:opt.asOf;
+      keys=keys.filter(month=>month>=opt.from.slice(0,7) && month<=until.slice(0,7));
+    }
+    return '<div class="rp-chartlabel">'+child+'跑量 · km</div><div class="rp-bars'+(monthly?' rp-month-bars':'')+'" style="--slots:'+(unit==='月'?31:Math.max(keys.length,1))+'">'+keys.map((b,i)=>{
       const amount=distance(buckets.get(b)||[]),tick=child==='年'?b:child==='周'?b.slice(5):b.slice(-2);
-      const caption=b+' · '+(amount==null?'暂无已归档跑量':km(amount)+' km');
-      return '<button class="rp-bar" data-rp-child="'+child+'" data-rp-key="'+b+'" title="'+caption+'" aria-label="'+caption+'" '+(amount==null?'disabled':'')+'><i style="height:'+((amount||0)/max*74)+'%"></i><span>'+((keys.length<16||i%5===0||i===keys.length-1)?tick:'')+'</span></button>';
+      const caption=b+' · '+(amount==null?'暂无已归档跑量':amount.toFixed(2)+' km');
+      return '<button class="rp-bar" '+(unit==='周'?'data-rp-week="'+k+'" ':'')+'data-rp-child="'+child+'" data-rp-key="'+b+'" title="'+caption+'" aria-label="'+caption+'" '+(amount==null?'disabled':'')+'>'+(monthly?'<span class="rp-amount">'+(amount==null?'':km(amount))+'</span>':'')+'<span class="rp-track"><i style="height:'+((amount||0)/max*100)+'%"></i></span><span class="rp-tick">'+((keys.length<16||i%5===0||i===keys.length-1)?tick:'')+'</span></button>';
     }).join('')+'</div>';
   }
   function card(k,rows,opt,child,max) {
-    const m=state.mode, drill=m==='年'?'月':m==='月'||m==='周'?'日':'';
+    const m=state.mode;
+    const selectDay=m==='日' && (state.focus?.unit!=='日'||state.focus.key!==k);
+    const drill=m==='年'?'月':m==='月'||m==='周'||selectDay?'日':'';
     const period=label(k,m),title=drill?'<button class="rp-title" data-rp-unit="'+m+'" data-rp-child="'+drill+'" data-rp-key="'+k+'">'+period+'</button>':'<b class="rp-title">'+period+'</b>';
     const note=key(opt.asOf,m)===k&&m!=='全部'?'截至 '+opt.asOf:({年:'自然年',月:'自然月',周:'周一至周日',日:'已归档跑步',全部:'当前筛选范围'})[m];
+    let scopeNote=note;
+    if(m==='年' && opt.scope!=='all' && opt.from && opt.to){
+      const first=[opt.from,k+'-01-01'].sort().at(-1), last=[opt.to,opt.asOf,k+'-12-31'].sort()[0];
+      scopeNote=(opt.scope==='cycle'?'训练周期':'所选范围')+' · '+first+' 至 '+last;
+    }
     const runs=rows.map(r=>r.distance_km).filter(x=>x>0);
     const elevation=rows.map(opt.climb).filter(x=>Number.isFinite(x)&&x>=0);
-    return '<div class="rp-card" data-rp-mode="'+m+'"><div class="rp-cap"><div>'+title+'<small>'+note+'</small></div><strong>'+km(distance(rows))+' <i>km</i></strong></div><div class="rp-metrics">'+figures(rows).filter(([,value])=>value!=='—').map(([l,v])=>'<div><small>'+l+'</small><b>'+v+'</b></div>').join('')+'</div>'+
-      formGrid(rows,opt.metric,m==='全部' && opt.scope==='all')+(m==='日'?'<div class="rp-activities">'+rows.map(r=>'<button data-rp-run="'+r.id+'"><span>'+esc(r.raw?.activityName||r.name||'跑步')+'</span><b>'+km(r.distance_km)+' km ›</b></button>').join('')+'</div>':bars(k,rows,m,child,max))+
+    return '<div class="rp-card" data-rp-mode="'+m+'"><div class="rp-cap"><div>'+title+'<small>'+scopeNote+'</small></div><strong>'+km(distance(rows))+' <i>km</i></strong></div><div class="rp-metrics">'+figures(rows).filter(([,value])=>value!=='—').map(([l,v])=>'<div><small>'+l+'</small><b>'+v+'</b></div>').join('')+'</div>'+
+      formGrid(rows,opt.metric,m==='全部' && opt.scope==='all')+(m==='日'?'<div class="rp-activities">'+rows.map(r=>'<button data-rp-run="'+r.id+'"><span>'+esc(r.raw?.activityName||r.name||'跑步')+'</span><b>'+km(r.distance_km)+' km ›</b></button>').join('')+'</div>':bars(k,rows,m,child,max,opt))+
       '<div class="rp-foot">'+(runs.length?'<span>最远单次 '+km(Math.max(...runs))+' km</span>':'')+(elevation.length?'<span>累计爬升 '+Math.round(elevation.reduce((a,b)=>a+b,0))+' m</span>':'')+'</div></div>';
   }
   function render(rows,opt) {
@@ -237,7 +273,7 @@ const RunPeriods = (() => {
     const max=Math.max(1,...[...groups(rows,child).values()].map(rs=>distance(rs)||0));
     const sorted=[...g.keys()].sort().reverse();
     return '<section class="rp"><div class="rp-tabs" aria-label="按时间展示">'+modes.map(m=>'<button data-rp-tab="'+m+'" aria-pressed="'+(m===state.mode)+'">'+m+'</button>').join('')+'</div>'+
-      (state.focus?'<button class="rp-back" data-rp-back>‹ 返回上一级 · '+label(state.focus.key,state.focus.unit)+'</button>':'')+
+      datePath(opt.scope)+
       '<div class="rp-heading"><h3>'+names[state.mode]+'</h3><small>'+g.size+' 个周期</small></div><div class="rp-grid">'+sorted.slice(0,state.limit).map(k=>card(k,g.get(k),opt,child,max)).join('')+'</div>'+
       (!g.size?'<p>当前筛选暂无跑步记录。</p>':'')+(sorted.length>state.limit?'<button data-rp-more>显示更多</button>':'')+'</section>';
   }
@@ -248,11 +284,27 @@ const RunPeriods = (() => {
       if(b.dataset.rpRun){open(Number(b.dataset.rpRun));return}
       let restoreScroll=null;const drill=!!b.dataset.rpChild;
       if(b.hasAttribute('data-rp-more'))state.limit+=6;
-      else if(b.hasAttribute('data-rp-back')){const last=state.history.pop();if(!last)return;state.mode=last.mode;state.focus=last.focus;state.limit=last.limit;restoreScroll=last.scroll}
-      else if(b.dataset.rpTab){state.mode=b.dataset.rpTab;state.limit=4;state.history=[];state.focus=null}
-      else if(b.dataset.rpChild){state.history.push({mode:state.mode,focus:state.focus,limit:state.limit,scroll:window.scrollY});state.mode=b.dataset.rpChild;state.focus={key:b.dataset.rpKey,unit:b.dataset.rpUnit||state.mode};state.limit=4}
+      else if(b.dataset.rpPath){
+        const unit=b.dataset.rpPath;
+        if(unit==='root'){
+          if(!state.rootView)return;
+          state.mode=state.rootView.mode;state.limit=state.rootView.limit;restoreScroll=state.rootView.scroll;
+          state.rootView=null;state.focus=null;
+        }else{
+          state.mode=unit;state.focus={unit,key:b.dataset.rpKey};state.limit=4;
+        }
+      }
+      else if(b.dataset.rpTab){state.mode=b.dataset.rpTab;state.limit=4;state.rootView=null;state.focus=null}
+      else if(b.dataset.rpChild){
+        if(!state.rootView)state.rootView={mode:state.mode,limit:state.limit,scroll:window.scrollY};
+        state.mode=b.dataset.rpChild;
+        const week=b.dataset.rpWeek||(b.dataset.rpUnit==='日'&&state.focus?.unit==='周'?state.focus.key:null);
+        state.focus={key:b.dataset.rpKey,unit:b.dataset.rpUnit||state.mode,week};
+        state.limit=4;
+      }
       else return;
       refresh();
+      if(b.dataset.rpPath||drill)document.querySelector('.rp-path [aria-current]')?.focus({preventScroll:true});
       if(restoreScroll!=null)window.scrollTo(0,restoreScroll);
       else if(drill){const next=document.querySelector('.rp');if(next?.getBoundingClientRect().top<0)next.scrollIntoView({block:'start'})}
     };

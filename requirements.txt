@@ -1,1 +1,2 @@
 garminconnect==0.3.20
+segno==1.6.6

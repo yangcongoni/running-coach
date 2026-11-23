@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1825">
+<meta name="referrer" content="no-referrer">
+<title>健康工作台 · 跑步训练与食衡</title>
+<style>
+:root{color-scheme:dark;--bg:#0e1825;--panel:#152230;--ink:#f1f5fa;--muted:#adbfce;--soft:#849caf;--line:#324254;--mint:#82d8bd;font:16px/1.55 "DM Sans","Microsoft YaHei","PingFang SC",system-ui,sans-serif;color:var(--ink);background:var(--bg)}*{box-sizing:border-box}body{margin:0;min-height:100svh;background:radial-gradient(ellipse at 90% 6%,#172b3d7a,transparent 49%),linear-gradient(120deg,#0b1420,#101d2b)}button,input{font:inherit}button,a,input{touch-action:manipulation}a{color:inherit;text-underline-offset:4px}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #a2dcff;outline-offset:4px}.shell{width:min(1152px,90%);margin:0 auto;padding:clamp(26px,4.5vw,64px) 0 40px}header{display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line);padding-bottom:clamp(24px,3.5vw,42px)}.brand{display:flex;align-items:center;gap:16px}h1,h2,p{margin:0}h1{font-size:clamp(27px,3.1vw,41px);line-height:1.2;letter-spacing:-.045em}.brand p{color:var(--soft);margin-top:6px;font-size:14px;letter-spacing:.04em}.mark{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;flex:none;padding:9px;height:53px;width:53px;border:1px solid #3d5770;border-radius:15px;background:#142637}.mark i{border-radius:4px;background:#88d7ed}.mark i:nth-child(2){background:#b6a5ef}.mark i:nth-child(3){background:#87d4bc}.mark i:nth-child(4){background:#a0bbf5}time{font-size:14px;font-variant-numeric:tabular-nums;color:var(--muted)}.toolbar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:28px 0 23px}.toolbar p{font-size:15px;color:var(--muted)}.actions{display:flex;gap:8px;flex-shrink:0}button{color:var(--ink);background:#1c2d40;border:1px solid #3b5067;border-radius:9px;padding:9px 14px;min-height:41px}button:hover{background:#263c52}.refresh{display:inline-flex;align-items:center;gap:8px}.refresh i{font:19px/1 system-ui;font-style:normal}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.card{--accent:#90d7ed;--well:#203f53;--button:#233e54;--btnline:#365c76;position:relative;display:flex;flex-direction:column;min-height:370px;padding:clamp(22px,2.4vw,33px);background:linear-gradient(130deg,#172635,#14212f 64%);border:1px solid var(--line);border-radius:18px}.card.food{--accent:#9cdcbd;--well:#274537;--button:#244239;--btnline:#3c6353;background:linear-gradient(130deg,#192b2c,#15242b 68%)}.upper{display:flex;align-items:center;justify-content:space-between;gap:15px}.group{font:600 12px/1.5 "DM Sans","Microsoft YaHei",sans-serif;letter-spacing:.1em;color:var(--soft)}.icon{width:54px;height:54px;background:var(--well);color:var(--accent);border-radius:15px;display:grid;place-items:center}.icon i{display:block;position:relative}.track{width:33px;height:17px;border:2px solid currentColor;border-radius:12px;transform:rotate(-31deg)}.track:before,.track:after{content:"";position:absolute;border:1.5px solid currentColor;border-radius:8px}.track:before{inset:2px}.track:after{inset:5px}.bowl{width:30px;height:14px;border:2px solid currentColor;border-radius:3px 3px 18px 18px;transform:translateY(3px)}.bowl:before{content:"";position:absolute;width:9px;height:10px;border:2px solid currentColor;border-radius:10px 1px 10px 1px;left:11px;top:-15px;transform:rotate(13deg)}.bowl:after{content:"";position:absolute;bottom:-5px;left:8px;width:11px;border-bottom:2px solid currentColor}.card h2{font-size:clamp(25px,2.7vw,34px);letter-spacing:-.04em;line-height:1.25;margin:24px 0 10px}.desc{font-size:15px;line-height:1.75;color:var(--muted);max-width:37em}.entry{margin-top:auto;padding-top:28px}.status{min-height:25px;margin:0 0 12px;display:flex;gap:8px;align-items:center;font-size:13px;color:#c4cdd9}.status:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}.status[data-level="ok"]{color:var(--mint)}.status[data-level="warn"]{color:#e3c486}.status[data-level="busy"]{color:#99b4cf}.open{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--button);border:1px solid var(--btnline);color:#f1f8fb;border-radius:9px;min-height:46px;text-decoration:none;font-weight:650}.open:hover{filter:brightness(1.15)}.open span{font-size:14px;color:var(--accent)}.routes{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:17px}.routes a,.edit-link{font-size:13px;color:#adc3d3}.edit-link{min-height:32px;background:none;border:0;text-decoration:underline;text-underline-offset:4px;padding:0;text-align:left}.edit-link:hover{color:#e6f5ff;background:none}.routes a{display:inline-flex;align-items:center;min-height:32px}.routes a:hover{color:#f4feff}footer{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-top:24px;padding:16px 0;border-top:1px solid var(--line);color:var(--soft);font-size:13px}footer a{color:var(--muted)}dialog{padding:0;border:1px solid #43586b;border-radius:17px;background:#172532;width:min(500px,calc(100% - 30px));color:var(--ink);box-shadow:0 20px 90px #0008}dialog::backdrop{background:#050a11bf}form{padding:24px}form h2{font-size:23px;letter-spacing:-.04em}form>p{font-size:14px;color:var(--muted);margin:6px 0 18px}label{display:block;margin:14px 0 6px;font-weight:650;font-size:14px}input{color:var(--ink);width:100%;min-height:43px;border:1px solid #465a6a;border-radius:7px;background:#0c1924;padding:7px 10px}input::placeholder{color:#889ba9}.form-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}.save{background:#305d53;border-color:#497d6e}.error{color:#ffb5a3;margin-top:9px;font-size:13px}.save-feedback{font-size:13px;color:#e7c58c}.fineprint{font-size:12px;color:var(--soft);margin:9px 0 0}.sr{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}[hidden]{display:none!important}
+@media(max-width:680px){.shell{width:calc(100% - 34px);padding-top:25px}.cards{grid-template-columns:1fr;gap:13px}.card{min-height:0;padding:19px 20px}.brand{gap:10px}.mark{height:43px;width:43px;padding:7px;border-radius:12px}.brand p{font-size:12px}.toolbar{padding:17px 0;gap:10px}.toolbar p{font-size:13px}.actions{gap:5px}.actions button{font-size:13px;padding:6px 9px;min-height:37px}.icon{width:40px;height:40px;border-radius:11px}.icon i{scale:.85}.card h2{margin-top:10px;font-size:25px}.desc{font-size:14px}.entry{padding-top:17px}.routes{margin-top:7px}.status{margin-bottom:7px}.open{min-height:43px}time{font-size:12px}footer{align-items:start;flex-wrap:wrap}.group{font-size:11px}}
+@media(max-width:410px){.toolbar{align-items:start;flex-direction:column}.toolbar .actions{align-self:flex-end;margin-top:-2px}.brand p{font-size:11px}.mark{height:38px;width:38px}.refresh i{display:none}}
+</style></head>
+<body><main class="shell">
+<header><div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><div><h1>健康工作台</h1><p>跑步与食衡 / 个人工作空间</p></div></div><time id="today"></time></header>
+<section class="toolbar" aria-label="连接检测"><p>优先使用已配置的局域网，离开 Wi-Fi 后可直接打开在线版。</p><div class="actions"><button type="button" id="settings">入口设置</button><button type="button" class="refresh" id="recheck"><i aria-hidden="true">↻</i>重新检测</button></div></section>
+<div class="cards">
+<article class="card run" id="run"><div class="upper"><span class="group">跑步 / 训练档案</span><span class="icon" aria-hidden="true"><i class="track"></i></span></div><h2>跑步训练</h2><p class="desc">查看训练计划、跑步记录和教练复盘，训练后填写反馈。</p><div class="entry"><p class="status" role="status">正在准备入口…</p><a class="open" href="/" aria-label="打开跑步训练">打开服务 <span aria-hidden="true">↗</span></a><div class="routes"><button type="button" class="edit-link">设置局域网入口</button><a class="lan" hidden>局域网入口</a><a class="online" href="/">在线版</a></div></div></article>
+<article class="card food" id="food"><div class="upper"><span class="group">饮食 / 餐食手记</span><span class="icon" aria-hidden="true"><i class="bowl"></i></span></div><h2>食衡</h2><p class="desc">记录三餐与运动，查看每日营养分析和饮食趋势。</p><div class="entry"><p class="status" role="status">正在准备入口…</p><a class="open" href="/food/" aria-label="打开食衡">打开服务 <span aria-hidden="true">↗</span></a><div class="routes"><button type="button" class="edit-link">设置局域网入口</button><a class="lan" hidden>局域网入口</a><a class="online" href="/food/">在线版</a></div></div></article>
+</div><noscript><p>启用 JavaScript 后可检测线路；也可以直接打开在线版。</p></noscript>
+<footer><span>两个服务共用跑步教练账号。</span><a href="/food/#training-archive">在食衡中连接训练档案 ↗</a></footer>
+<p id="storage-note" class="save-feedback" role="status"></p>
+</main>
+<dialog id="dialog" aria-labelledby="dialog-title"><form id="form"><h2 id="dialog-title">局域网入口</h2><p>填入在同一 Wi-Fi 下实际能打开的完整网址。留空时使用在线版。</p><label for="run-url">跑步训练</label><input type="url" id="run-url" placeholder="https://…" autocomplete="off" spellcheck="false"><label for="food-url">食衡</label><input type="url" id="food-url" placeholder="https://…/food/" autocomplete="off" spellcheck="false"><p class="fineprint">设置仅保存在当前浏览器。浏览器限制检测时，仍可手动尝试局域网入口。</p><p class="error" role="alert" id="error"></p><div class="form-actions"><button id="cancel" type="button">取消</button><button class="save" type="submit">保存并检测</button></div></form></dialog>
+<script>
+(() => {
+  'use strict';
+  const services = [
+    {id:'run',remote:location.origin+'/', matches:html=>/<title>\s*(?:跑步训练档案|训练手记(?: · 跑步档案)?)\s*<\/title>|<button[^>]*>登录训练手记<\/button>/.test(html)},
+    {id:'food',remote:location.origin+'/food/', matches:html=>/食衡/.test(html) && /登录食衡|饮食手记|core\.js/.test(html)}
+  ];
+  const key = 'run-food-workbench.lan.v1';
+  const dialog = document.getElementById('dialog');
+  const notice = document.getElementById('storage-note');
+  function valid(value) {
+    if (!value) return '';
+    const u = new URL(value);
+    if (!['http:','https:'].includes(u.protocol) || u.username || u.password) throw Error('请填写不含账号密码的 HTTP 或 HTTPS 网址。');
+    return u.href;
+  }
+  function load() {
+    const values = {};
+    try {
+      const stored = JSON.parse(localStorage.getItem(key) || '{}');
+      for (const s of services) {
+        try { values[s.id] = valid(stored[s.id]); } catch { values[s.id] = ''; }
+      }
+    } catch { /* A private window may disable persistent storage. */ }
+    return values;
+  }
+  let lan = load();
+  let checking = 0;
+  let controller;
+  let pending = Promise.resolve();
+  function configure(id) {
+    for (const s of services) document.getElementById(s.id+'-url').value = lan[s.id] || '';
+    document.getElementById('error').textContent = '';
+    dialog.showModal();
+    document.getElementById((id || 'run')+'-url').focus();
+  }
+  document.getElementById('settings').addEventListener('click',()=>configure());
+  document.getElementById('cancel').addEventListener('click',()=>dialog.close());
+  document.getElementById('form').addEventListener('submit',event=>{
+    event.preventDefault();
+    const next = {};
+    for (const s of services) {
+      const field = document.getElementById(s.id+'-url');
+      try { next[s.id] = valid(field.value.trim()); }
+      catch { document.getElementById('error').textContent = '请填写完整的 HTTP 或 HTTPS 地址，且不要包含账号密码。'; field.focus(); return; }
+    }
+    lan = next;
+    try { localStorage.setItem(key,JSON.stringify(next)); notice.textContent=''; }
+    catch { notice.textContent='当前环境无法保存设置，本次打开期间仍然有效。'; }
+    dialog.close();
+    refresh();
+  });
+  const stamp = document.getElementById('today');
+  const now = new Date(), timeZone = 'Asia/Shanghai';
+  stamp.dateTime = new Intl.DateTimeFormat('sv-SE',{year:'numeric',month:'2-digit',day:'2-digit',timeZone}).format(now);
+  stamp.textContent = new Intl.DateTimeFormat('zh-CN',{month:'long',day:'numeric',weekday:'long',timeZone}).format(now);
+  for (const s of services) document.querySelector('#'+s.id+' .edit-link').addEventListener('click',()=>configure(s.id));
+  // Cross-origin responses can be opaque even on HTTP errors. Never interpret one as a verified page.
+  async function probe(url, service, parent) {
+    const address = new URL(url);
+    const localHttp = address.protocol === 'http:' && location.protocol === 'https:' && !['localhost','127.0.0.1','[::1]'].includes(address.hostname);
+    if (localHttp) return 'restricted';
+    const abort = new AbortController();
+    const cancel = () => abort.abort();
+    if (parent.aborted) return 'unknown';
+    parent.addEventListener('abort',cancel,{once:true});
+    const timer = setTimeout(cancel,3000);
+    const options = {method:'GET',cache:'no-store',referrerPolicy:'no-referrer',credentials:'omit',signal:abort.signal};
+    try {
+      let response;
+      try { response = await fetch(url,{...options,mode:'cors'}); }
+      catch {
+        if (abort.signal.aborted) return 'unknown';
+        // Some gateways allow top-level navigation only. Preserve the manual link.
+        response = await fetch(url,{...options,mode:'no-cors'});
+      }
+      if (response.type === 'opaque' || response.type === 'opaqueredirect') return 'opaque';
+      if (!response.ok) return 'failed';
+      const type = response.headers.get('content-type') || '';
+      if (!/text\/html/i.test(type)) return 'wrong';
+      // Inspect only the document head and login markers, never load an archive into the workbench.
+      const reader = response.body?.getReader();
+      if (!reader) return 'unknown';
+      const decoder = new TextDecoder();
+      let prefix = '';
+      try {
+        while (prefix.length < 8192) {
+          const {value,done} = await reader.read();
+          if (done) break;
+          prefix += decoder.decode(value.subarray(0,8192-prefix.length),{stream:true});
+          if (service.matches(prefix)) return 'verified';
+        }
+      } finally { reader.cancel().catch(()=>{}); }
+      return 'wrong';
+    } catch { return 'unknown'; }
+    finally { clearTimeout(timer); parent.removeEventListener('abort',cancel); }
+  }
+  function show(card,label,level,destination) {
+    const status = card.querySelector('.status');
+    status.textContent = label;
+    status.dataset.level = level;
+    card.querySelector('.open').href = destination;
+  }
+  async function inspect(s,token,signal) {
+    const card = document.getElementById(s.id), local = lan[s.id], link = card.querySelector('.lan');
+    link.hidden = !local;
+    if (local) link.href = local; else link.removeAttribute('href');
+    card.querySelector('.edit-link').hidden = Boolean(local);
+    show(card,local?'正在检测局域网和在线版…':'正在检测在线版…','busy',s.remote);
+    const [a,b] = await Promise.all([local?probe(local,s,signal):Promise.resolve('unset'),probe(s.remote,s,signal)]);
+    if (checking !== token) return;
+    if (a === 'verified') {
+      show(card,'局域网可达 · 优先直连','ok',local);
+      return;
+    }
+    if (a === 'opaque') {
+      show(card,'局域网有响应 · 优先尝试直连','neutral',local);
+      return;
+    }
+    const localState = {unset:'未设置局域网', opaque:'局域网响应未验证', restricted:'浏览器限制局域网检测', wrong:'局域网页面不匹配', failed:'局域网服务异常', unknown:'局域网未能验证'}[a];
+    if (b === 'verified') show(card,localState+' · 在线版可达','ok',s.remote);
+    else if (b === 'failed' || b === 'wrong') show(card,localState+' · 在线版服务异常','warn',s.remote);
+    else show(card,localState+' · 尝试在线版','warn',s.remote);
+  }
+  async function refresh() {
+    controller?.abort();
+    controller = new AbortController();
+    const token = ++checking;
+    const button = document.getElementById('recheck');
+    button.setAttribute('aria-busy','true');
+    pending = Promise.all(services.map(s=>inspect(s,token,controller.signal)));
+    await pending;
+    if (checking === token) button.removeAttribute('aria-busy');
+  }
+  for (const s of services) {
+    const link = document.querySelector('#'+s.id+' .open');
+    link.addEventListener('click',async event=>{
+      if (!lan[s.id] || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || !document.getElementById('recheck').hasAttribute('aria-busy')) return;
+      event.preventDefault();
+      let active;
+      do { active = pending; await active; } while (active !== pending);
+      location.assign(link.href);
+    });
+  }
+  document.getElementById('recheck').addEventListener('click',refresh);
+  window.addEventListener('online',refresh);
+  window.addEventListener('pageshow',event=>{if(event.persisted) refresh()});
+  refresh();
+})();
+</script></body></html>

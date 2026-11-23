@@ -4,7 +4,10 @@ The source database is read-only.  The full HTML and JSON remain lossless export
 the mobile snapshot only omits duplicate/raw transport and audit payloads.
 """
 from pathlib import Path
-from archive_config import desktop_template
+from mobile_archive import stage_reviews
+from today_run import today_runs
+from strength_duration import enrich_sessions
+from archive_config import desktop_template, refresh_local_stage_template
 import base64
 import copy
 from datetime import datetime, timezone, timedelta
@@ -107,6 +110,10 @@ def data_date(data):
             date = row.get('date')
             if isinstance(date, str) and re.fullmatch(r'\d{4}-\d{2}-\d{2}', date):
                 dates.append(date)
+    for row in data['metadata']:
+        if row['key'] == 'body_composition_history':
+            dates.extend(item['date'] for item in json.loads(row['value_json']).get('records', [])
+                         if re.fullmatch(r'\d{4}-\d{2}-\d{2}', item.get('date') or ''))
     return max(dates) if dates else None
 
 
@@ -119,6 +126,10 @@ def make_html(template, data, backup, mode):
     for name in assets:
         html = html.replace('/assets/' + name, '${OFFLINE_ASSETS[' + json.dumps(name) + ']}')
     extra = 'const OFFLINE_ASSETS=' + js_json(assets) + ';\n'
+    if 'desktopStageTimeline' in html:
+        art = {p.stem: 'data:image/webp;base64,' + base64.b64encode(p.read_bytes()).decode('ascii')
+               for p in (ROOT / 'poster-art').glob('*.webp')}
+        extra += 'const OFFLINE_POSTER_ART=' + js_json(art) + ';\n'
     extra += 'const ARCHIVE_DATA=' + js_json(data) + ';\n'
     extra += """
 function download(blob,name){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),3000)}
@@ -193,9 +204,13 @@ def publish():
     with sqlite3.connect(f'file:{(OUT / "训练日志.sqlite3").as_posix()}?mode=ro', uri=True) as conn:
         conn.row_factory = sqlite3.Row
         data = {table: [dict(row) for row in conn.execute('SELECT * FROM ' + table)] for table in TABLES}
+        data['stage_reviews'] = stage_reviews(conn)
+        data['today_run_snapshot'] = today_runs(conn)
         with sqlite3.connect(':memory:') as target:
             conn.backup(target)
             backup = base64.b64encode(target.serialize()).decode('ascii')
+    enrich_sessions(data["sessions"], data["strength_sets"])
+    refresh_local_stage_template()
     template = desktop_template()
     now = datetime.now(timezone(timedelta(hours=8)))
     hasher = hashlib.sha256(template.encode('utf-8'))

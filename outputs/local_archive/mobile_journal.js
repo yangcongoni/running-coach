@@ -1,4 +1,57 @@
 let annualYear='',prReturn=null,routeParent=null,selectedNight='';
+let stageRunReturn=null;
+function stageReviewView(s){
+ const fields=stageMetrics(s), hero=fields.values().next().value;
+ const days=new Map();
+ function day(date){
+   if(!days.has(date))days.set(date,{runs:[],strength:[]});
+   return days.get(date);
+ }
+ for(const r of s.runs)day(r.date).runs.push(r);
+ for(const r of s.strength||[])day(r.date).strength.push(r);
+ for(const r of s.recoveries)day(r.date).recovery=r;
+ if(s.followingRun)day(s.followingRun.date).following=s.followingRun;
+ for(const run of s.runs){
+   const next=offsetDate(run.date,1);
+   if(next>data.day)continue;
+   const row=day(next);
+   row.afterRun=true;
+   if(!row.recovery&&s.followingMorning?.date===next)row.recovery=s.followingMorning;
+ }
+ const runRow=(r,following=false)=>{
+   const title=r.test?r.test.km+' 公里测试':following?'下次跑步':journalRunName(r);
+   const values=[Number.isFinite(r.km)?kmText(r.km):'',Number.isFinite(r.seconds)?clock(r.seconds):'',following&&r.hr!=null?'均心 '+r.hr:'',following&&r.rpe!=null?'RPE '+r.rpe:''].filter(Boolean);
+   return '<div class="journal-run"><button data-action="stage-run:'+Number(r.id)+'">'+esc(title)+'<span aria-hidden="true">›</span></button>'+p(values.join(' · '))+
+     (r.test?p('测试段 '+clock(r.test.seconds)+' · '+clock(r.test.seconds/r.test.km)+'/km'):'')+(r.note?p(r.note):'')+'</div>';
+ };
+ const timeline=[...days].sort(([a],[b])=>a.localeCompare(b)).map(([date,row])=>{
+   const blocks=[];
+   if(row.recovery||row.afterRun){
+     const r=row.recovery||{}, feedback=r.feedback||r.feeling;
+     const cells=[['睡眠',r.sleep==null?null:Math.floor(r.sleep/60)+' 小时 '+Math.round(r.sleep%60)+' 分'],['静息心率',r.hr==null?null:r.hr+' 次/分'],
+       ['单晚 HRV',r.hrv==null?null:r.hrv+' ms'],['准备度',r.readiness==null?null:r.readiness+' / 100']].filter(([,v])=>v!=null);
+     blocks.push('<details class="journal-recovery"><summary>'+(row.afterRun?'次晨恢复':'当日恢复')+'</summary>'+
+       (cells.length?'<dl>'+cells.map(([k,v])=>'<div><dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd></div>').join('')+'</dl>':p('暂无设备读数'))+
+       (feedback?p(feedback):row.afterRun?(pastLegReviewWeek(date)?p('起床腿感：正常（默认）'):button('补充次晨腿感 ›','stage-feedback:'+date)):'')+'</details>');
+   }
+   for(const r of row.runs){
+     blocks.push(runRow(r));
+     const post=recoveryAfterRun(r,row.recovery);
+     if(post)blocks.push('<p class="post-estimate">跑后预计恢复 '+Math.floor(post.minutes/60)+' 小时 '+post.minutes%60+' 分</p>');
+   }
+   if(row.strength.length)blocks.push('<b>力量训练</b>'+p(row.strength.length+' 次'));
+   if(row.following&&!row.runs.some(r=>r.id===row.following.id))blocks.push(runRow(row.following,true));
+   return '<div class="journal-node"><time datetime="'+esc(date)+'">'+esc(journalDate(date))+'</time>'+blocks.join('')+'</div>';
+ }).join('');
+ return button('‹ 复盘报告','topic:报告')+heading(s.custom?'自选时段':'阶段复盘')+'<article class="stage-head"><small>'+esc(stageRange(s))+'</small><h2>'+esc(s.title)+'</h2>'+
+   (s.custom?'<p>'+fields.get('runs')[1]+'跑步 · '+(fields.get('km')?.[1]||'里程待核')+'</p>':hero?'<div class="stage-result"><strong>'+esc(hero[1])+'</strong><span>'+esc(hero[0])+'</span></div>':'')+
+   (fields.size>=2&&(!s.custom||s.runs.length)?button('阶段分享','stage-share'):'')+'</article>'+stageJourney(s,section('训练时间线')+
+   '<div class="stage-timeline">'+timeline+(s.custom&&!s.runs.length?p('这段时间没有归档跑步。'):'')+'</div>'+
+   (s.custom?(s.related.length?section('相关阶段复盘')+s.related.map(r=>button(r.title+' ›','topic:阶段_'+r.id)).join(''):''):
+   card('教练复盘',p(s.assessment)+p(s.recommendation)+(s.through?'<small>数据截至 '+esc(s.through)+'</small>':''))));
+}
+
+
 let routeList=false;
 const routeFilter={period:'最近4周',type:'全部类型',scope:'全程'};
 const routeCache=new Map();
@@ -88,5 +141,5 @@ v.addEventListener('click',async e=>{
  }render();
  }catch(error){msg.textContent=error.message}
 });
-document.querySelector('nav').addEventListener('click',()=>{prReturn=null;routeParent=null;routeList=false});
+document.querySelector('nav').addEventListener('click',()=>{prReturn=null;routeParent=null;routeList=false;stageRunReturn=null});
 

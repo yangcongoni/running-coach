@@ -1,7 +1,7 @@
 """Verified API semantics; missing/changed schemas fail closed."""
 import copy,datetime as dt,math
 
-STATUS_MAP={7:'高效训练'}
+STATUS_MAP={5:'恢复训练',6:'巅峰状态',7:'高效训练'}
 RECORD_TYPES={1:('1 公里',1,'pr.label.1k.run'),2:('1英里',1.609344,'pr.label.1mile.run'),3:('5 公里',5,'pr.label.5k.run'),4:('10 公里',10,'pr.label.10k.run'),5:('半马',21.0975,'pr.label.half.marathon'),6:('全马',42.195,'pr.label.full.marathon'),7:('最长跑步纪录',None,'pr.label.farthest.run')}
 
 def focus_period(m):
